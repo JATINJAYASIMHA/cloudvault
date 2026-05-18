@@ -2,6 +2,14 @@ import { useEffect, useState } from "react";
 
 import axios from "axios";
 
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+} from "firebase/auth";
+
+import { auth } from "./firebase";
+
 function App() {
   const [file, setFile] = useState(null);
 
@@ -12,6 +20,8 @@ function App() {
   const [files, setFiles] = useState([]);
 
   const [progress, setProgress] = useState(0);
+
+  const [user, setUser] = useState(null);
 
   const API =
     "https://cloudvault-backend-b1s5.onrender.com/api/files";
@@ -30,7 +40,33 @@ function App() {
     fetchFiles();
   }, []);
 
+  const googleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+
+      const result = await signInWithPopup(
+        auth,
+        provider
+      );
+
+      setUser(result.user);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const logout = async () => {
+    await signOut(auth);
+
+    setUser(null);
+  };
+
   const handleUpload = async () => {
+    if (!user) {
+      alert("Please login first");
+      return;
+    }
+
     if (!file) {
       alert("Please select a file");
       return;
@@ -138,6 +174,66 @@ function App() {
           padding: "40px",
         }}
       >
+        {/* Auth Section */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginBottom: "20px",
+          }}
+        >
+          {!user ? (
+            <button
+              onClick={googleLogin}
+              style={{
+                background: "#ffffff",
+                color: "#111827",
+                border: "none",
+                padding: "12px 20px",
+                borderRadius: "12px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              Sign in with Google
+            </button>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "15px",
+              }}
+            >
+              <img
+                src={user.photoURL}
+                alt=""
+                style={{
+                  width: "45px",
+                  height: "45px",
+                  borderRadius: "50%",
+                }}
+              />
+
+              <p>{user.displayName}</p>
+
+              <button
+                onClick={logout}
+                style={{
+                  background: "#dc2626",
+                  color: "white",
+                  border: "none",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+
         <h2
           style={{
             fontSize: "38px",
