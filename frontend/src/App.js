@@ -8,48 +8,48 @@ function App() {
   const [files, setFiles] = useState([]);
 
   const fetchFiles = async () => {
-    try {
-      const res = await axios.get(
-        "http://localhost:5000/api/files"
-      );
+  try {
+    const res = await axios.get(
+      "https://cloudvault-backend-b1s5.onrender.com/api/files"
+    );
 
-      setFiles(res.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    setFiles(res.data);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
-  useEffect(() => {
+useEffect(() => {
+  fetchFiles();
+}, []);
+
+const handleUpload = async () => {
+  if (!file) {
+    alert("Please select a file");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    setLoading(true);
+
+    const res = await axios.post(
+      "https://cloudvault-backend-b1s5.onrender.com/api/files/upload",
+      formData
+    );
+
+    setMessage(res.data.message);
+
     fetchFiles();
-  }, []);
-
-  const handleUpload = async () => {
-    if (!file) {
-      alert("Please select a file");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      setLoading(true);
-
-      const res = await axios.post(
-        "http://localhost:5000/api/files/upload",
-        formData
-      );
-
-      setMessage(res.data.message);
-
-      fetchFiles();
-    } catch (error) {
-      console.log(error);
-      setMessage("Upload failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (error) {
+    console.log(error);
+    setMessage("Upload failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div
