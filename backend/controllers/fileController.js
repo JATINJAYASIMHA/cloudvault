@@ -1,8 +1,12 @@
 const multer = require("multer");
-const multerS3 = require("multer-s3");
-const { PutObjectCommand } = require("@aws-sdk/client-s3");
+
+const {
+  PutObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
 
 const s3 = require("../config/s3");
+
 const File = require("../models/File");
 
 const storage = multer.memoryStorage();
@@ -54,7 +58,9 @@ const uploadFile = async (req, res) => {
 
 const getFiles = async (req, res) => {
   try {
-    const files = await File.find().sort({ uploadedAt: -1 });
+    const files = await File.find().sort({
+      uploadedAt: -1,
+    });
 
     res.status(200).json(files);
   } catch (error) {
@@ -66,8 +72,40 @@ const getFiles = async (req, res) => {
   }
 };
 
+const deleteFile = async (req, res) => {
+  try {
+    const file = await File.findById(req.params.id);
+
+    if (!file) {
+      return res.status(404).json({
+        message: "File not found",
+      });
+    }
+
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: file.fileName,
+    };
+
+    await s3.send(new DeleteObjectCommand(params));
+
+    await File.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      message: "File deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Delete failed",
+    });
+  }
+};
+
 module.exports = {
   upload,
   uploadFile,
   getFiles,
+  deleteFile,
 };
